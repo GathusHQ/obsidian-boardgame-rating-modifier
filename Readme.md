@@ -8,7 +8,7 @@ A lightweight companion page for adjusting a game’s rating. Enter a game name,
 
 1. Download **Board Game Rating Modifier.md** from this repository.
 2. Place it anywhere in your Obsidian vault.
-3. Open the page and use the interface to update a game’s `Rating` field.
+3. Open the page and use the interface to update a game’s `Star-Rating` field.
 
 Changes appear immediately in the Board Game Dashboard.
 
