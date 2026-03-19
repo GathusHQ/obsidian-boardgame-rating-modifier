@@ -39,16 +39,37 @@
     style.textContent = `
       .modify-table { width:100%; max-width:800px; margin:24px auto; border-collapse:collapse; }
       .modify-table td { vertical-align:top; padding:12px; }
+
       .modify-field { display:flex; align-items:center; margin-bottom:4px; }
       .modify-field label { width:140px; font-weight:500; white-space:nowrap; margin-right:8px; }
+
+      /* Text input (not used now but kept for consistency) */
       .modify-field input {
-        flex:1; padding:6px 8px;
+        flex:1;
+        padding:6px 8px;
         border:1px solid var(--background-modifier-border);
         border-radius:4px;
         background:var(--background-primary);
         color:var(--text-normal);
         font-size:0.95em;
       }
+      
+      .modify-table td:first-child {
+	    width: 420px;   /* this adjusts the left cell width */
+      }
+
+      /* Dropdowns: fixed width so they match exactly */
+      .modify-field select {
+        width:320px;
+        max-width:320px;
+        padding:6px 8px;
+        border:1px solid var(--background-modifier-border);
+        border-radius:4px;
+        background:var(--background-primary);
+        color:var(--text-normal);
+        font-size:0.95em;
+      }
+
       .modify-image {
         position: relative;
         width: 240px;
@@ -97,19 +118,34 @@
 
     // Left cell: form
     const formCell = row.insertCell();
-    function makeField(label, placeholder = "") {
-      const wrap = formCell.createEl('div', { cls: 'modify-field' });
-      wrap.createEl('label', { text: label });
-      return wrap.createEl('input', { attr: { type: 'text', placeholder } });
-    }
 
-    const titleInput  = makeField('Game Title',      'Exact file name (no extension)');
-    const ratingInput = makeField('New Rating (0–5)', 'e.g. 4');
+    // ── Game Title dropdown ───────────────────────────────────
+    const titleWrap = formCell.createEl('div', { cls: 'modify-field' });
+    titleWrap.createEl('label', { text: 'Game Title' });
+
+    const titleSelect = titleWrap.createEl('select');
+
+    pages
+      .map(p => p.file.name)
+      .sort((a, b) => a.localeCompare(b))
+      .forEach(name => {
+        const opt = titleSelect.createEl('option', { text: name, value: name });
+        if (name === gameTitle) opt.selected = true;
+      });
+
+    // ── Rating dropdown (0–5) ─────────────────────────────────
+    const ratingWrap = formCell.createEl('div', { cls: 'modify-field' });
+    ratingWrap.createEl('label', { text: 'New Rating (0–5)' });
+
+    const ratingSelect = ratingWrap.createEl('select');
+    [0,1,2,3,4,5].forEach(n => {
+      ratingSelect.createEl('option', { text: n.toString(), value: n.toString() });
+    });
 
     const hint = formCell.createEl('p');
     hint.innerHTML =
-      `Please enter the game title exactly as it appears in the Board Games folder. Don't use ( : )'s<br><br>` +
-      `For the rating, enter a whole number from 0 (worst) to 5 (best).`;
+      `Select the game you want to update from the dropdown.<br><br>` +
+      `Choose a rating from 0 (worst) to 5 (best).`;
 
     const btn = formCell.createEl('button', { text: '➕ Update Rating' });
     Object.assign(btn.style, {
@@ -122,11 +158,27 @@
 
     const msg = formCell.createEl('div', { cls: 'modify-message' });
 
+    // ── 4) Live-update image + link when dropdown changes ─────
+    titleSelect.addEventListener('change', () => {
+      const selected = titleSelect.value;
+      const page = pages.find(p => p.file.name === selected);
+      if (!page) return;
+
+      imgEl.src = page["Cover-Img"] || "";
+      titleLink.textContent = page.file.name;
+
+      titleLink.onclick = (e) => {
+        e.preventDefault();
+        app.workspace.openLinkText(page.file.path, '', false);
+      };
+    });
+
+    // ── 5) Update rating button logic ─────────────────────────
     btn.addEventListener('click', async () => {
-      const title = titleInput.value.trim();
-      const rating = ratingInput.value.trim();
-      if (!title || !rating) {
-        msg.textContent = '⚠️ Please enter both Title and Rating.';
+      const title = titleSelect.value.trim();
+      const rating = ratingSelect.value.trim();
+      if (!title || rating === "") {
+        msg.textContent = '⚠️ Please select a rating.';
         return;
       }
 
@@ -164,7 +216,7 @@
 
       const updated = `---\n${updatedFM.join('\n')}\n---` + content.slice(m[0].length);
       await app.vault.modify(file, updated);
-      msg.textContent = `✅ Updated “${title}” to rating ${rating}.`;
+      msg.textContent = `Updated “${title}” to rating ${rating}.`;
     });
 
     // Right cell: image + link
@@ -185,15 +237,14 @@
       imgEl.addEventListener(evt, e => {
         e.preventDefault();
         e.stopImmediatePropagation();
-        if (evt === 'mousedown') showOverlay(coverUrl);
+        if (evt === 'mousedown') showOverlay(imgEl.src);
       }, { capture: true })
     );
 
   } catch (e) {
-    dv.paragraph('**🛑 Error in modify-rating snippet:**');
+    dv.paragraph('Error in modify-rating snippet:');
     dv.codeblock(e.stack || e.toString(), 'javascript');
   }
 })();
 
 ```
-
