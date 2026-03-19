@@ -32,3 +32,4 @@ Changes appear immediately in the Board Game Dashboard.
 - The displayed cover comes from the Cover-Img URL in a randomly selected game’s YAML.
 - The rating you enter applies only to the game name typed into the input box.
 - This page is fully self‑contained and updates your game files directly.
+
