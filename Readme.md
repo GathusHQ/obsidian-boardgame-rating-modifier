@@ -27,6 +27,11 @@ Changes appear immediately in the Board Game Dashboard.
 
 ---
 
+> **Update – March 19, 2026**  
+> The Modify Rating tool now uses dropdowns for both game selection and rating, and the cover image updates live when you choose a different game. This prevents typos and makes the tool easier and safer to use.
+
+---
+
 ## 📝 Notes
 
 - The displayed cover comes from the Cover-Img URL in a randomly selected game’s YAML.
